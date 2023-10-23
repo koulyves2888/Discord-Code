@@ -1,0 +1,15 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: azpubsub
+spec:
+  type: pubsub.azure.servicebus
+  metadata:
+  - name: connectionString
+    value: "Endpoint=sb://slidexapp.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=MgarUFddAoz9pqa895bA6PZicBG7idE/9+ASbNZr1gk="
+  - name: consumerID
+    value: "{uuid}"
+  - name: topicName
+    value: "UserRegistration"
+  - name: topicName
+    value: "UserProfile"
