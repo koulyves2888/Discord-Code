@@ -1,0 +1,64 @@
+version: '3.4'
+
+services:
+  communication.api:
+    image: ${DOCKER_REGISTRY-}communicationapi
+    build:
+      context: .
+      dockerfile: Communication.API/Dockerfile
+
+  identity.api:
+    image: ${DOCKER_REGISTRY-}identityapi
+    build:
+      context: .
+      dockerfile: Identity.API/Dockerfile
+
+  communicationapi-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+     "--app-id", "communicationapi",
+     "--app-port", "3000",
+     "-dapr-http-port", "3501",
+     "-dapr-grpc-port", "50002",
+     "--log-level", "debug",
+     "--placement-host-address", "placement:50006", # Dapr's placement service can be reach via the docker DNS entry
+     "--resources-path", "./components"
+     ]
+    ports:
+      - "3501:3501"
+      - "50002:50002"
+    volumes:
+        - "./components/:/components" # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
+    depends_on:
+      - communication.api
+  identityapi-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+     "--app-id", "identityapi",
+     "--app-port", "3000",
+     "-dapr-http-port", "3502",
+     "-dapr-grpc-port", "50003",
+     "--log-level", "debug",
+     "--placement-host-address", "placement:50006", # Dapr's placement service can be reach via the docker DNS entry
+     "--resources-path", "./components"
+     ]
+    ports:
+      - "3502:3502"
+      - "50003:50003"
+    volumes:
+        - "./components/:/components" # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
+    depends_on:
+      - identity.api
+  placement:
+    image: "daprio/dapr"
+    command: ["./placement", "--port", "50006"]
+    ports:
+      - "50006:50006"
+  redis:
+    container_name: redis
+    image: redis:alpine
+  zipkin:
+    container_name: zipkin
+    image: openzipkin/zipkin-slim
